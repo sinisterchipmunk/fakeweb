@@ -21,7 +21,7 @@ class TestFakeWeb < Test::Unit::TestCase
       FakeWeb.registered_uri?
     end
     assert_raises ArgumentError do
-      FakeWeb.registered_uri?(:get, "http://example.com", "/example")
+      FakeWeb.registered_uri?(:get, "http://example.com", "/example", "another")
     end
   end
 
@@ -30,7 +30,7 @@ class TestFakeWeb < Test::Unit::TestCase
       FakeWeb.response_for
     end
     assert_raises ArgumentError do
-      FakeWeb.response_for(:get, "http://example.com", "/example")
+      FakeWeb.response_for(:get, "http://example.com", "/example", "another")
     end
   end
 

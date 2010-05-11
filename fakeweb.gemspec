@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Kampmeier", "Blaine Cook"]
-  s.date = %q{2009-12-25}
+  s.date = %q{2010-05-10}
   s.description = %q{FakeWeb is a helper for faking web requests in Ruby. It works at a global level, without modifying code or writing extensive stubs.}
   s.email = ["chris@kampers.net", "romeda@gmail.com"]
   s.extra_rdoc_files = [
@@ -45,6 +45,7 @@ Gem::Specification.new do |s|
      "test/test_missing_open_uri.rb",
      "test/test_missing_pathname.rb",
      "test/test_other_net_http_libraries.rb",
+     "test/test_post_with_request_body.rb",
      "test/test_precedence.rb",
      "test/test_query_string.rb",
      "test/test_regexes.rb",
@@ -77,7 +78,7 @@ Gem::Specification.new do |s|
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{fakeweb}
-  s.rubygems_version = %q{1.3.5}
+  s.rubygems_version = %q{1.3.6}
   s.summary = %q{A tool for faking responses to HTTP requests}
   s.test_files = [
     "test/test_allow_net_connect.rb",
@@ -89,6 +90,7 @@ Gem::Specification.new do |s|
      "test/test_missing_open_uri.rb",
      "test/test_missing_pathname.rb",
      "test/test_other_net_http_libraries.rb",
+     "test/test_post_with_request_body.rb",
      "test/test_precedence.rb",
      "test/test_query_string.rb",
      "test/test_regexes.rb",

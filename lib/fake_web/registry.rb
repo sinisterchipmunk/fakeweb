@@ -1,7 +1,6 @@
 module FakeWeb
   class Registry #:nodoc:
     include Singleton
-
     attr_accessor :uri_map
 
     def initialize
@@ -13,17 +12,20 @@ module FakeWeb
     end
 
     def register_uri(method, uri, options)
-      uri_map[normalize_uri(uri)][method] = [*[options]].flatten.collect do |option|
+      data = data_from_options(options)
+      target_hash = uri_map[normalize_uri(uri)][method] ||= {}
+      target_hash[data] = [*[options]].flatten.collect do |option|
         FakeWeb::Responder.new(method, uri, option, option[:times])
       end
     end
 
-    def registered_uri?(method, uri)
-      !responders_for(method, uri).empty?
+    def registered_uri?(method, uri, data = nil)
+      data = data_from_options(data) || data
+      !responders_for(method, uri, data).empty?
     end
 
-    def response_for(method, uri, &block)
-      responders = responders_for(method, uri)
+    def response_for(method, uri, data = nil, &block)
+      responders = responders_for(method, uri, data)
       return nil if responders.empty?
 
       next_responder = responders.last
@@ -35,23 +37,42 @@ module FakeWeb
         end
       end
 
-      next_responder.response(&block)
+      if next_responder
+        next_responder.response(&block)
+      else nil
+      end
     end
 
 
     private
+    def data_from_options(options)
+      data = options.kind_of?(Hash) && options.key?(:data) ? options[:data] : nil
+      stringified_data(data)
+    end
+    
+    def stringified_data(data)
+      if data.kind_of?(Hash)
+        data.inject({}) do |hash, (key, value)|
+          hash[key.to_s] = stringified_data(value)
+          hash
+        end
+      else
+        data
+      end
+    end
 
-    def responders_for(method, uri)
+    def responders_for(method, uri, data)
+      data = stringified_data(data)
       uri = normalize_uri(uri)
 
-      uri_map_matches(method, uri, URI) ||
-      uri_map_matches(:any,   uri, URI) ||
-      uri_map_matches(method, uri, Regexp) ||
-      uri_map_matches(:any,   uri, Regexp) ||
+      uri_map_matches(method, uri, URI, data) ||
+      uri_map_matches(:any,   uri, URI, data) ||
+      uri_map_matches(method, uri, Regexp, data) ||
+      uri_map_matches(:any,   uri, Regexp, data) ||
       []
     end
 
-    def uri_map_matches(method, uri, type_to_check = URI)
+    def uri_map_matches(method, uri, type_to_check = URI, data = nil)
       uris_to_check = variations_of_uri_as_strings(uri)
 
       matches = uri_map.select { |registered_uri, method_hash|
@@ -69,9 +90,15 @@ module FakeWeb
           "More than one registered URI matched this request: #{method.to_s.upcase} #{uri}"
       end
 
-      matches.map { |_, method_hash| method_hash[method] }.first
+      matches.map do |_, method_hash|
+        if !(value = method_hash[method][data]) && method_hash[method].has_key?(nil)
+          method_hash[method][nil]
+        else
+          value
+        end
+      end.first
     end
-
+    
 
     def variations_of_uri_as_strings(uri_object)
       normalized_uri = normalize_uri(uri_object.dup)

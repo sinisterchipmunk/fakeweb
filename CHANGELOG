@@ -1,3 +1,5 @@
+* optionally support varying responses based on request bodies [Colin MacKenzie IV]
+
 fakeweb (1.2.8)
 
 * support Pathname objects where a filename is expected [Chris Kampmeier]

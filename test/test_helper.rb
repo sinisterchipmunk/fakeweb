@@ -18,7 +18,8 @@ class Test::Unit::TestCase
 
   alias teardown_without_fakeweb teardown
   def teardown
-    FakeWeb.allow_net_connect = @original_allow_net_connect
+    # the defined? bit just shuts up a warning I get on Ruby 1.8.7-173 about the variable not being initialized.
+    FakeWeb.allow_net_connect = defined?(@original_allow_net_connect) ? @original_allow_net_connect : false
   end
 end
 

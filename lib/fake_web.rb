@@ -138,13 +138,13 @@ module FakeWeb
   # Returns the faked Net::HTTPResponse object associated with +method+ and +uri+.
   def self.response_for(*args, &block) #:nodoc: :yields: response
     case args.length
-    when 2
+    when 2, 3
       Registry.instance.response_for(*args, &block)
     when 1
       print_missing_http_method_deprecation_warning(*args)
       Registry.instance.response_for(:any, *args, &block)
     else
-      raise ArgumentError.new("wrong number of arguments (#{args.length} for 2)")
+      raise ArgumentError.new("wrong number of arguments (#{args.length} for 3)")
     end
   end
 
@@ -155,7 +155,7 @@ module FakeWeb
   # Specify a method of <tt>:any</tt> to check for against all HTTP methods.
   def self.registered_uri?(*args)
     case args.length
-    when 2
+    when 2, 3
       Registry.instance.registered_uri?(*args)
     when 1
       print_missing_http_method_deprecation_warning(*args)

@@ -1,6 +1,7 @@
 require 'net/http'
 require 'net/https'
 require 'stringio'
+require 'cgi'
 
 module Net  #:nodoc: all
 
@@ -38,17 +39,23 @@ module Net  #:nodoc: all
     def request_with_fakeweb(request, body = nil, &block)
       uri = FakeWeb::Utility.request_uri_as_string(self, request)
       method = request.method.downcase.to_sym
+      body ||= decode_hash(request.body) if request.body
 
-      if FakeWeb.registered_uri?(method, uri)
+      if FakeWeb.registered_uri?(method, uri, body)
         @socket = Net::HTTP.socket_type.new
-        FakeWeb.response_for(method, uri, &block)
+        FakeWeb.response_for(method, uri, body, &block)
       elsif FakeWeb.allow_net_connect?
         connect_without_fakeweb
         request_without_fakeweb(request, body, &block)
       else
         uri = FakeWeb::Utility.strip_default_port_from_uri(uri)
-        raise FakeWeb::NetConnectNotAllowedError,
-              "Real HTTP connections are disabled. Unregistered request: #{request.method} #{uri}"
+        if body || method == :post || method == :put
+          raise FakeWeb::NetConnectNotAllowedError,
+                "Real HTTP connections are disabled. Unregistered request: #{request.method} #{uri} (with #{body.inspect})"
+        else
+          raise FakeWeb::NetConnectNotAllowedError,
+                "Real HTTP connections are disabled. Unregistered request: #{request.method} #{uri}"
+        end
       end
     end
     alias_method :request_without_fakeweb, :request
@@ -64,6 +71,17 @@ module Net  #:nodoc: all
     end
     alias_method :connect_without_fakeweb, :connect
     alias_method :connect, :connect_with_fakeweb
+    
+    private
+    def decode_hash(string)
+      hash = CGI.parse string
+      hash.each do |key, value|
+        if value.kind_of?(Array) && value.length == 1
+          hash[key] = YAML::load(value.shift)
+        end
+      end
+      hash
+    end
   end
 
 end

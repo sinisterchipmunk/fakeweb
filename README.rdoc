@@ -145,6 +145,44 @@ simply add the header as an option to +register_uri+:
 
 This sets the "Content-Type" header in the response.
 
+=== Varying expectations involving request bodies
+
+Particularly useful for testing POST and PUT requests, you can register URIs
+to send various different responses based on the request body by passing the
+<tt>:data</tt> option to +register_uri+:
+
+  FakeWeb.register_uri(:post, "http://example.com/hello", :body => "Hello, Colin", :data => { :name => "Colin" })
+  
+  Net::HTTP.start('example.com') do |query|
+    query.post('/hello', :name => "Colin")  #=> "Hello, Colin"
+  end
+
+In the above example, FakeWeb will respond with "Hello, Colin" whenever it is
+passed the hash <tt>{ :name => "Colin" }</tt>. Any other data (for instance,
+<tt>{ :name => "Jake" }</tt>) will either be sent to the live host (if
+<tt>FakeWeb.allow_net_connect</tt> is true), or else raise an error.
+
+To prepare a canned response for all data, simply omit the <tt>:data</tt> option
+as usual:
+
+  FakeWeb.register_uri(:post, "http://example.com/processor", :body => "Sorry, I don't know you")
+
+You can also register the same URI for multiple data objects, and use the above
+example as a catch-all:
+
+  FakeWeb.register_uri(:post, "http://example.com/hello", :body => "Sorry, I don't know you")
+  FakeWeb.register_uri(:post, "http://example.com/hello", :body => "Hello, Colin", :data => { :name => "Colin" })
+  FakeWeb.register_uri(:post, "http://example.com/hello", :body => "Hello, Jake",  :data => { :name => "Jake" })
+  
+  Net::HTTP.start('example.com') do |query|
+    query.post('/hello', :name => "Colin")  #=> "Hello, Colin"
+    query.post('/hello', :name => "Jake")   #=> "Hello, Jake"
+    query.post('/hello', :name => "Tom")    #=> "Sorry, I don't know you"    
+  end
+
+Request bodies are obviously expected to be Hashes, but could conceivably
+be any object you wish to use.
+
 == More info
 
 FakeWeb lets you decouple your test environment from live services without
@@ -158,17 +196,6 @@ has host-based access controls.
 
 FakeWeb works with anything based on Net::HTTP--both higher-level wrappers,
 like OpenURI, as well as a ton of libraries for popular web services.
-
-
-== Known Issues
-
-* Request bodies are ignored, including PUT and POST parameters. If you need
-  different responses for different request bodies, you need to request
-  different URLs, and register different responses for each. (Query strings are
-  fully supported, though.) We're currently considering how the API should
-  change to add support for request bodies in 1.3.0. Your input would be really
-  helpful: see http://groups.google.com/group/fakeweb-users/browse_thread/thread/44d190a6b12e4273
-  for a discussion of some different options. Thanks!
 
 
 == Copyright
