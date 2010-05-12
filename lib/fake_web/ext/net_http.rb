@@ -39,6 +39,7 @@ module Net  #:nodoc: all
     def request_with_fakeweb(request, body = nil, &block)
       uri = FakeWeb::Utility.request_uri_as_string(self, request)
       method = request.method.downcase.to_sym
+      original_body = body
       body ||= decode_hash(request.body) if request.body
 
       if FakeWeb.registered_uri?(method, uri, body)
@@ -46,7 +47,7 @@ module Net  #:nodoc: all
         FakeWeb.response_for(method, uri, body, &block)
       elsif FakeWeb.allow_net_connect?
         connect_without_fakeweb
-        request_without_fakeweb(request, body, &block)
+        request_without_fakeweb(request, original_body, &block)
       else
         uri = FakeWeb::Utility.strip_default_port_from_uri(uri)
         if body || method == :post || method == :put

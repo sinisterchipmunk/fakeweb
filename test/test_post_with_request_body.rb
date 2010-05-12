@@ -1,6 +1,32 @@
 require File.join(File.dirname(__FILE__), "test_helper")
 
 class TestPostWithRequestBody < Test::Unit::TestCase
+  def test_live_uri_with_params_hash_should_not_raise_error
+    FakeWeb.allow_net_connect = true
+    FakeWeb.register_uri(:post, 'http://mock/nowhere', :body => 'foo', :data => { :c => 1, :d => 1})
+    
+    # We need to stub out the actual request so we can catch the error without making a real request.
+    Net::HTTP.class_eval do
+      alias request_without_fakeweb_stub request_without_fakeweb
+      def request_without_fakeweb(where, body = nil, &block)
+        if body && where.respond_to?(:body) && where.body
+          raise ArgumentError, "both of body argument and HTTPRequest#body set"
+        end
+      end
+    end
+    
+    # Finally, the test itself!
+    assert_nothing_raised(ArgumentError) do
+      Net::HTTP.post_form(URI.parse('http://api.eve-online.com/account/Characters.xml.aspx'), :a => 1, :b => 1)
+    end
+      
+    # And now we need to un-stub it.
+    Net::HTTP.class_eval do
+      undef request_without_fakeweb
+      alias request_without_fakeweb request_without_fakeweb_stub
+    end
+  end
+  
   def test_register_uri_with_params_hash_should_not_be_registered_without_them
     FakeWeb.register_uri(:post, 'http://mock/', :body => 'foo', :data => { :a => 1, :b => 1 })
     FakeWeb.register_uri(:post, 'http://mock/', :body => 'bar', :data => { :c => 1, :d => 1 })

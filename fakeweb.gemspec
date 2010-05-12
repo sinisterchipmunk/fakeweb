@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Chris Kampmeier", "Blaine Cook"]
-  s.date = %q{2010-05-10}
+  s.date = %q{2010-05-12}
   s.description = %q{FakeWeb is a helper for faking web requests in Ruby. It works at a global level, without modifying code or writing extensive stubs.}
   s.email = ["chris@kampers.net", "romeda@gmail.com"]
   s.extra_rdoc_files = [
